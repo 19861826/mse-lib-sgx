@@ -8,7 +8,7 @@ import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from mse_lib_sgx import globs
-from mse_lib_sgx.certificate import SGXCertificate
+from mse_lib_sgx.certificate import Certificate
 from mse_lib_sgx.error import CryptoError
 
 
@@ -70,7 +70,7 @@ class SGXHTTPRequestHandler(BaseHTTPRequestHandler):
 def serve(
     hostname: str,
     port: int,
-    certificate: SGXCertificate,
+    certificate: Certificate,
     uuid: str,
     need_ssl_private_key: bool,
 ):
@@ -88,25 +88,26 @@ def serve(
 
     httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
 
-    threading.Thread(target=kill_event, args=(httpd,)).start()
-    threading.Thread(target=timeout_event, args=(180,)).start()
+    timer = threading.Timer(interval=30, function=kill, args=(180,))
+    timer.start()
+
+    threading.Thread(target=kill_event, args=(httpd, timer)).start()
 
     httpd.serve_forever()
 
 
-def kill_event(httpd: HTTPServer):
+def kill_event(httpd: HTTPServer, timer: threading.Timer):
     """Kill HTTP server in a thread if `EXIT_EVENT` is set."""
     while True:
         if globs.EXIT_EVENT.is_set():
             logging.info("Stopping the configuration server...")
+            timer.cancel()
             httpd.shutdown()
             return
 
         time.sleep(1)
 
 
-def timeout_event(secs: int):
-    """Kill HTTP server after `secs`."""
-    time.sleep(secs)
-    logging.info("Idle timeout reached ({} seconds)", secs)
+def kill():
+    """Kill HTTP server by setting `EXIT_EVENT`."""
     globs.EXIT_EVENT.set()

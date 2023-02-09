@@ -1,4 +1,4 @@
-"""mse_lib_sgx.cli module."""
+"""mse_lib_sgx.cli.bootstrap module."""
 
 import argparse
 import asyncio
@@ -208,7 +208,7 @@ def run() -> None:
     config = Config.from_mapping(config_map)
 
     logging.info("Loading the application...")
-    module, application = args.application.split(":")
+    module_name, application_name = args.application.split(":")
 
     sys.path.append(f"{globs.MODULE_DIR_PATH}")
 
@@ -217,7 +217,7 @@ def run() -> None:
     logging.debug("sysconfig.get_paths(): %s", sysconfig.get_paths())
     logging.debug("application: %s", args.application)
 
-    app = getattr(importlib.import_module(module), application)
+    application = getattr(importlib.import_module(module_name), application_name)
 
     logging.info("Starting the application (mode=%s)...", ssl_app_mode.name)
-    asyncio.run(serve(app, config))
+    asyncio.run(serve(application, config))

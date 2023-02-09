@@ -40,7 +40,10 @@ setup(
         "mse-lib-crypto>=1.1,<1.2",
     ],
     entry_points={
-        "console_scripts": ["mse-bootstrap = mse_lib_sgx.cli:run"],
+        "console_scripts": [
+            "mse-bootstrap = mse_lib_sgx.cli.boostrap:run",
+            "mse-bootstrap-debug = mse_lib_sgx.cli.debug:run",
+        ],
     },
     classifiers=[
         "Programming Language :: Python :: 3",
