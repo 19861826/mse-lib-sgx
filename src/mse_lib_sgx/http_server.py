@@ -89,6 +89,8 @@ def serve(
     httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
 
     threading.Thread(target=kill_event, args=(httpd,)).start()
+    threading.Thread(target=timeout_event, args=(180,)).start()
+
     httpd.serve_forever()
 
 
@@ -101,3 +103,10 @@ def kill_event(httpd: HTTPServer):
             return
 
         time.sleep(1)
+
+
+def timeout_event(secs: int):
+    """Kill HTTP server after `secs`."""
+    time.sleep(secs)
+    logging.info("Idle timeout reached ({} seconds)", secs)
+    globs.EXIT_EVENT.set()
